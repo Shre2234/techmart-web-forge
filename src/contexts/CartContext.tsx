@@ -1,3 +1,4 @@
+
 import { createContext, useState, useContext, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -21,7 +22,7 @@ interface CartItem extends Product {
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, isRental: boolean = false, rentalDuration: number = 1) => void;
+  addToCart: (product: Product, isRental?: boolean, rentalDuration?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
