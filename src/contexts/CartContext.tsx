@@ -1,4 +1,3 @@
-
 import { createContext, useState, useContext, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -110,7 +109,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const getCartTotal = () => {
     return items.reduce((total, item) => {
       const price = item.isRental 
-        ? (item.rentalPrice || item.price / 5) * item.rentalDuration!
+        ? (item.rentalPrice || item.price / 5) * (item.rentalDuration || 1)
         : item.price;
       return total + price * item.quantity;
     }, 0);

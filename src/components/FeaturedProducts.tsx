@@ -1,13 +1,19 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from './ProductCard';
-import { products } from '@/data/products';
 import { Button } from '@/components/ui/button';
+import { fetchFeaturedProducts } from '@/services/productService';
 
 const FeaturedProducts = () => {
-  const featuredProducts = products.filter(product => product.featured);
   const [scrollPosition, setScrollPosition] = useState(0);
+  
+  const { data: featuredProducts = [], isLoading } = useQuery({
+    queryKey: ['featuredProducts'],
+    queryFn: fetchFeaturedProducts
+  });
+
   const scrollContainer = featuredProducts.length > 3;
 
   const scroll = (direction: 'left' | 'right') => {
@@ -69,11 +75,34 @@ const FeaturedProducts = () => {
             className="flex overflow-x-auto gap-6 pb-4 scrollbar-none"
             style={{ scrollBehavior: 'smooth' }}
           >
-            {featuredProducts.map(product => (
-              <div key={product.id} className="min-w-[300px] max-w-[300px]">
-                <ProductCard product={product} featured />
-              </div>
-            ))}
+            {isLoading ? (
+              // Loading skeletons
+              Array(4).fill(0).map((_, index) => (
+                <div 
+                  key={index}
+                  className="min-w-[300px] max-w-[300px] bg-gray-100 animate-pulse rounded h-[400px]"
+                />
+              ))
+            ) : (
+              featuredProducts.map(product => (
+                <div key={product.id} className="min-w-[300px] max-w-[300px]">
+                  <ProductCard 
+                    product={{
+                      id: product.id,
+                      name: product.name,
+                      price: product.price,
+                      description: product.description,
+                      image: product.image,
+                      category: product.category,
+                      featured: product.featured,
+                      rentalAvailable: product.rental_available,
+                      rentalPrice: product.rental_price || undefined
+                    }} 
+                    featured 
+                  />
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

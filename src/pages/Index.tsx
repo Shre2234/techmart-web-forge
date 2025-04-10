@@ -1,12 +1,12 @@
-
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { categories } from '@/data/products';
 import { useToast } from '@/components/ui/use-toast';
 import { useEffect } from 'react';
+import { fetchCategories } from '@/services/productService';
 import { Laptop, Monitor, Headphones, Home, Smartphone, Watch, Gamepad, Speaker } from 'lucide-react';
 
 const categoryIcons = {
@@ -22,6 +22,11 @@ const categoryIcons = {
 
 const Index = () => {
   const { toast } = useToast();
+  
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: fetchCategories
+  });
   
   useEffect(() => {
     toast({
@@ -41,20 +46,29 @@ const Index = () => {
         {/* Categories Section */}
         <section className="py-12 container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-8 text-center">Browse Categories</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.filter(cat => cat !== 'All').map((category) => (
-              <a 
-                key={category}
-                href={`/products?category=${category.toLowerCase()}`}
-                className="flex flex-col items-center justify-center p-6 bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="mb-3 text-techmart-purple">
-                  {categoryIcons[category as keyof typeof categoryIcons] || <Speaker size={24} />}
-                </div>
-                <span className="text-gray-800 font-medium">{category}</span>
-              </a>
-            ))}
-          </div>
+          
+          {categoriesLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[...Array(8)].map((_, index) => (
+                <div key={index} className="h-24 bg-gray-100 animate-pulse rounded-lg"></div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {categories.map((category) => (
+                <a 
+                  key={category.id}
+                  href={`/products?category=${category.name.toLowerCase()}`}
+                  className="flex flex-col items-center justify-center p-6 bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="mb-3 text-techmart-purple">
+                    {categoryIcons[category.name as keyof typeof categoryIcons] || <Speaker size={24} />}
+                  </div>
+                  <span className="text-gray-800 font-medium">{category.name}</span>
+                </a>
+              ))}
+            </div>
+          )}
         </section>
         
         <FeaturedProducts />
