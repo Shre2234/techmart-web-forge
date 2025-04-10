@@ -1,8 +1,11 @@
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useCart, Product } from '@/contexts/CartContext';
-import { ShoppingCart, Heart } from 'lucide-react';
+import { ShoppingCart, Heart, Clock } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ProductCardProps {
   product: Product;
@@ -11,9 +14,11 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, featured }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const [isRentalMode, setIsRentalMode] = useState(false);
+  const [rentalDuration, setRentalDuration] = useState(1);
 
   const handleAddToCart = () => {
-    addToCart(product);
+    addToCart(product, isRentalMode, rentalDuration);
   };
 
   return (
@@ -42,9 +47,47 @@ const ProductCard = ({ product, featured }: ProductCardProps) => {
           <span className="text-sm text-gray-500">{product.category}</span>
           <h3 className="font-semibold text-lg line-clamp-1">{product.name}</h3>
         </div>
-        <p className="text-xl font-bold text-techmart-purple">
-          ${product.price.toFixed(2)}
-        </p>
+        <div className="flex justify-between mb-2">
+          <p className="text-xl font-bold text-techmart-purple">
+            ${isRentalMode ? (product.rentalPrice || (product.price / 5).toFixed(2)) : product.price.toFixed(2)}
+            {isRentalMode && <span className="text-sm font-normal">/day</span>}
+          </p>
+          
+          {product.rentalAvailable && (
+            <Select
+              value={isRentalMode ? "rent" : "buy"}
+              onValueChange={(value) => setIsRentalMode(value === "rent")}
+            >
+              <SelectTrigger className="w-[90px]">
+                <SelectValue placeholder="Option" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="buy">Buy</SelectItem>
+                <SelectItem value="rent">Rent</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        
+        {isRentalMode && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm">Duration: {rentalDuration} day{rentalDuration > 1 ? 's' : ''}</span>
+              <span className="text-sm font-medium">
+                ${((product.rentalPrice || product.price / 5) * rentalDuration).toFixed(2)}
+              </span>
+            </div>
+            <Slider 
+              min={1}
+              max={30}
+              step={1}
+              value={[rentalDuration]} 
+              onValueChange={([value]) => setRentalDuration(value)}
+              className="py-2"
+            />
+          </div>
+        )}
+        
         <p className="text-gray-600 text-sm mt-2 line-clamp-2">
           {product.description}
         </p>
@@ -54,8 +97,8 @@ const ProductCard = ({ product, featured }: ProductCardProps) => {
           className="w-full bg-techmart-purple hover:bg-techmart-purple-dark gap-2" 
           onClick={handleAddToCart}
         >
-          <ShoppingCart size={16} />
-          Add to Cart
+          {isRentalMode ? <Clock size={16} /> : <ShoppingCart size={16} />}
+          {isRentalMode ? 'Rent Now' : 'Add to Cart'}
         </Button>
       </CardFooter>
     </Card>

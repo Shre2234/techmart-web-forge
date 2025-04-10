@@ -1,4 +1,3 @@
-
 import { createContext, useState, useContext, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -10,15 +9,19 @@ export interface Product {
   image: string;
   category: string;
   featured?: boolean;
+  rentalAvailable?: boolean;
+  rentalPrice?: number;
 }
 
 interface CartItem extends Product {
   quantity: number;
+  isRental?: boolean;
+  rentalDuration?: number;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, isRental: boolean = false, rentalDuration: number = 1) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -32,9 +35,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const { toast } = useToast();
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, isRental: boolean = false, rentalDuration: number = 1) => {
     setItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === product.id);
+      const existingItem = prevItems.find(
+        (item) => item.id === product.id && item.isRental === isRental
+      );
       
       if (existingItem) {
         toast({
@@ -43,17 +48,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         });
         
         return prevItems.map((item) =>
-          item.id === product.id
+          item.id === product.id && item.isRental === isRental
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       } else {
+        const message = isRental 
+          ? `${product.name} has been added to your rental cart for ${rentalDuration} day(s)`
+          : `${product.name} has been added to your cart`;
+
         toast({
-          title: 'Product added to cart',
-          description: `${product.name} has been added to your cart`,
+          title: isRental ? 'Product added to rentals' : 'Product added to cart',
+          description: message,
         });
         
-        return [...prevItems, { ...product, quantity: 1 }];
+        return [...prevItems, { 
+          ...product, 
+          quantity: 1, 
+          isRental, 
+          rentalDuration: isRental ? rentalDuration : undefined 
+        }];
       }
     });
   };
@@ -93,7 +107,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getCartTotal = () => {
-    return items.reduce((total, item) => total + item.price * item.quantity, 0);
+    return items.reduce((total, item) => {
+      const price = item.isRental 
+        ? (item.rentalPrice || item.price / 5) * item.rentalDuration!
+        : item.price;
+      return total + price * item.quantity;
+    }, 0);
   };
 
   const getCartItemCount = () => {
