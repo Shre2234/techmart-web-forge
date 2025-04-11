@@ -95,10 +95,10 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
   // Process products to add brand and apply price adjustments
   const productsWithBrands = data?.map(item => {
     // If the brand doesn't exist in the database, assign one based on category
-    // from the brandsByCategory mapping in utils.ts
+    // We need to explicitly add the brand property to the item object
     const product = {
       ...item,
-      brand: item.brand || getBrandForCategory(item.category)
+      brand: getBrandForCategory(item.category)
     } as Product;
     
     // Apply brand-specific price adjustment
@@ -155,7 +155,7 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
   return data?.map(item => {
     const product = {
       ...item,
-      brand: item.brand || getBrandForCategory(item.category)
+      brand: getBrandForCategory(item.category)
     } as Product;
     
     return adjustPriceByBrand(product);
@@ -175,3 +175,4 @@ export const fetchCategories = async (): Promise<Category[]> => {
   
   return data || [];
 };
+
