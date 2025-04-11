@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Product {
@@ -8,6 +7,7 @@ export interface Product {
   description: string;
   image: string;
   category: string;
+  brand: string | null;
   featured: boolean;
   rental_available: boolean;
   rental_price: number | null;
@@ -18,11 +18,21 @@ export interface Category {
   name: string;
 }
 
-export const fetchProducts = async (category?: string): Promise<Product[]> => {
+export interface Brand {
+  id: string;
+  name: string;
+  category: string;
+}
+
+export const fetchProducts = async (category?: string, brand?: string): Promise<Product[]> => {
   let query = supabase.from('products').select('*');
   
   if (category && category !== 'all') {
     query = query.eq('category', category);
+  }
+  
+  if (brand && brand !== 'all') {
+    query = query.eq('brand', brand);
   }
   
   const { data, error } = await query;
@@ -33,6 +43,25 @@ export const fetchProducts = async (category?: string): Promise<Product[]> => {
   }
   
   return data || [];
+};
+
+export const fetchBrandsByCategory = async (category?: string): Promise<string[]> => {
+  let query = supabase.from('products').select('brand');
+  
+  if (category && category !== 'all') {
+    query = query.eq('category', category);
+  }
+  
+  const { data, error } = await query.not('brand', 'is', null);
+  
+  if (error) {
+    console.error('Error fetching brands:', error);
+    throw error;
+  }
+  
+  // Extract unique brands
+  const uniqueBrands = [...new Set(data.map(item => item.brand))];
+  return uniqueBrands as string[];
 };
 
 export const fetchFeaturedProducts = async (): Promise<Product[]> => {

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -44,7 +45,14 @@ const ProductCard = ({ product, featured }: ProductCardProps) => {
       </div>
       <CardContent className="p-4">
         <div className="mb-2">
-          <span className="text-sm text-gray-500">{product.category}</span>
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-500">{product.category}</span>
+            {product.brand && (
+              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                {product.brand}
+              </span>
+            )}
+          </div>
           <h3 className="font-semibold text-lg line-clamp-1">{product.name}</h3>
         </div>
         <div className="flex justify-between mb-2">

@@ -1,3 +1,4 @@
+
 import { createContext, useState, useContext, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { formatToINR } from '@/lib/utils';
@@ -9,6 +10,7 @@ export interface Product {
   description: string;
   image: string;
   category: string;
+  brand?: string;
   featured?: boolean;
   rentalAvailable?: boolean;
   rentalPrice?: number;
