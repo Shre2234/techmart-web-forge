@@ -1,6 +1,6 @@
-
 import { createContext, useState, useContext, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { formatToINR } from '@/lib/utils';
 
 export interface Product {
   id: string;

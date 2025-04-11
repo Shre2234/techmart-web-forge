@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
+import { formatToINR } from '@/lib/utils';
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCart();
@@ -104,7 +105,7 @@ const Cart = () => {
                               </button>
                             </div>
                             <div className="flex items-center gap-4">
-                              <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                              <span className="font-semibold">{formatToINR(item.price * item.quantity)}</span>
                               <button 
                                 onClick={() => removeFromCart(item.id)}
                                 className="text-red-500 hover:text-red-700"
@@ -158,7 +159,7 @@ const Cart = () => {
                             </div>
                             <div className="flex items-center gap-4">
                               <span className="font-semibold">
-                                ${((item.rentalPrice || item.price / 5) * item.quantity * (item.rentalDuration || 1)).toFixed(2)}
+                                {formatToINR((item.rentalPrice || item.price / 5) * item.quantity * (item.rentalDuration || 1))}
                               </span>
                               <button 
                                 onClick={() => removeFromCart(item.id)}
@@ -212,22 +213,22 @@ const Cart = () => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${getCartTotal().toFixed(2)}</span>
+                  <span>{formatToINR(getCartTotal())}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span>$0.00</span>
+                  <span>₹0.00</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>${(getCartTotal() * 0.07).toFixed(2)}</span>
+                  <span>{formatToINR(getCartTotal() * 0.07)}</span>
                 </div>
                 
                 <Separator className="my-2" />
                 
                 <div className="flex justify-between font-bold">
                   <span>Total</span>
-                  <span>${(getCartTotal() * 1.07).toFixed(2)}</span>
+                  <span>{formatToINR(getCartTotal() * 1.07)}</span>
                 </div>
               </div>
               

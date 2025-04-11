@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { useCart, Product } from '@/contexts/CartContext';
 import { ShoppingCart, Heart, Clock } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { formatToINR } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -49,7 +49,9 @@ const ProductCard = ({ product, featured }: ProductCardProps) => {
         </div>
         <div className="flex justify-between mb-2">
           <p className="text-xl font-bold text-techmart-purple">
-            ${isRentalMode ? (product.rentalPrice || (product.price / 5).toFixed(2)) : product.price.toFixed(2)}
+            {isRentalMode 
+              ? formatToINR(product.rentalPrice || product.price / 5) 
+              : formatToINR(product.price)}
             {isRentalMode && <span className="text-sm font-normal">/day</span>}
           </p>
           
@@ -74,7 +76,7 @@ const ProductCard = ({ product, featured }: ProductCardProps) => {
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm">Duration: {rentalDuration} day{rentalDuration > 1 ? 's' : ''}</span>
               <span className="text-sm font-medium">
-                ${((product.rentalPrice || product.price / 5) * rentalDuration).toFixed(2)}
+                {formatToINR((product.rentalPrice || product.price / 5) * rentalDuration)}
               </span>
             </div>
             <Slider 
