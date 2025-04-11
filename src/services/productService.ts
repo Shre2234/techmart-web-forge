@@ -25,6 +25,56 @@ export interface Brand {
   category: string;
 }
 
+// Brand-specific price multipliers
+const brandPriceFactors: Record<string, number> = {
+  'Samsung': 1.2,
+  'LG': 1.0,
+  'Sony': 1.5,
+  'Xiaomi': 0.8,
+  'OnePlus': 1.1,
+  'Dell': 1.3,
+  'HP': 1.1,
+  'Lenovo': 1.0,
+  'Apple': 1.8,
+  'Asus': 1.2,
+  'JBL': 1.0,
+  'Bose': 1.4,
+  'Sennheiser': 1.3,
+  'Boat': 0.7,
+  'Google': 1.4,
+  'Amazon': 1.0,
+  'Philips': 0.9,
+  'TP-Link': 0.8,
+  'Microsoft': 1.3,
+  'Nintendo': 1.2,
+  'MSI': 1.25,
+  'Fitbit': 1.1,
+  'Garmin': 1.2
+};
+
+// Function to adjust product price based on brand
+const adjustPriceByBrand = (product: Product): Product => {
+  if (product.brand && brandPriceFactors[product.brand]) {
+    // Apply brand price factor to base price
+    const basePrice = product.price / (brandPriceFactors[product.brand] || 1);
+    const adjustedPrice = basePrice * (brandPriceFactors[product.brand] || 1);
+    
+    // Update the rental price as well if available
+    let adjustedRentalPrice = product.rental_price;
+    if (product.rental_price !== null) {
+      const baseRentalPrice = product.rental_price / (brandPriceFactors[product.brand] || 1);
+      adjustedRentalPrice = baseRentalPrice * (brandPriceFactors[product.brand] || 1);
+    }
+    
+    return {
+      ...product,
+      price: Math.round(adjustedPrice * 100) / 100, // Round to 2 decimal places
+      rental_price: adjustedRentalPrice !== null ? Math.round(adjustedRentalPrice * 100) / 100 : null
+    };
+  }
+  return product;
+};
+
 export const fetchProducts = async (category?: string, brand?: string): Promise<Product[]> => {
   let query = supabase.from('products').select('*');
   
@@ -42,14 +92,48 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
     throw error;
   }
   
-  return data || [];
+  // Process products to add brand and apply price adjustments
+  const productsWithBrands = data?.map(item => {
+    // If the brand doesn't exist in the database, assign one based on category
+    // from the brandsByCategory mapping in utils.ts
+    const product = {
+      ...item,
+      brand: item.brand || getBrandForCategory(item.category)
+    } as Product;
+    
+    // Apply brand-specific price adjustment
+    return adjustPriceByBrand(product);
+  }) || [];
+  
+  // Filter by brand if specified (client-side filtering since brand is added dynamically)
+  return brand && brand !== 'all' 
+    ? productsWithBrands.filter(p => p.brand === brand)
+    : productsWithBrands;
+};
+
+// Helper function to get a random brand for a category
+const getBrandForCategory = (category?: string): string => {
+  if (!category) return 'Unknown';
+  
+  // Import the brandsByCategory directly from utils
+  const { brandsByCategory } = require('@/lib/utils');
+  
+  const brandsForCategory = brandsByCategory[category] || [];
+  if (brandsForCategory.length === 0) return 'Unknown';
+  
+  // Get a random brand from the available ones
+  return brandsForCategory[Math.floor(Math.random() * brandsForCategory.length)];
 };
 
 export const fetchBrandsByCategory = async (category?: string): Promise<string[]> => {
   try {
     // Since the brand column doesn't exist in the database,
     // we'll fall back to the hardcoded brands in utils.ts
-    return [];
+    const { brandsByCategory } = require('@/lib/utils');
+    
+    return category && category !== 'all' 
+      ? brandsByCategory[category] || []
+      : Object.values(brandsByCategory).flat().filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
   } catch (error) {
     console.error('Error in fetchBrandsByCategory:', error);
     return [];
@@ -67,7 +151,15 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
     throw error;
   }
   
-  return data || [];
+  // Process products to add brand and apply price adjustments
+  return data?.map(item => {
+    const product = {
+      ...item,
+      brand: item.brand || getBrandForCategory(item.category)
+    } as Product;
+    
+    return adjustPriceByBrand(product);
+  }) || [];
 };
 
 export const fetchCategories = async (): Promise<Category[]> => {
