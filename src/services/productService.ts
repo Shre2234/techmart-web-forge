@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Product {
@@ -7,7 +8,7 @@ export interface Product {
   description: string;
   image: string;
   category: string;
-  brand: string | null;
+  brand: string | null;  // Change from required to nullable to match database structure
   featured: boolean;
   rental_available: boolean;
   rental_price: number | null;
@@ -42,26 +43,31 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
     throw error;
   }
   
-  return data || [];
+  return data as Product[] || [];
 };
 
 export const fetchBrandsByCategory = async (category?: string): Promise<string[]> => {
-  let query = supabase.from('products').select('brand');
-  
-  if (category && category !== 'all') {
-    query = query.eq('category', category);
+  try {
+    let query = supabase.from('products').select('brand');
+    
+    if (category && category !== 'all') {
+      query = query.eq('category', category);
+    }
+    
+    const { data, error } = await query.not('brand', 'is', null);
+    
+    if (error) {
+      console.error('Error fetching brands:', error);
+      throw error;
+    }
+    
+    // Extract unique brands
+    const uniqueBrands = [...new Set(data.map(item => item.brand))].filter(Boolean);
+    return uniqueBrands as string[];
+  } catch (error) {
+    console.error('Error in fetchBrandsByCategory:', error);
+    return [];
   }
-  
-  const { data, error } = await query.not('brand', 'is', null);
-  
-  if (error) {
-    console.error('Error fetching brands:', error);
-    throw error;
-  }
-  
-  // Extract unique brands
-  const uniqueBrands = [...new Set(data.map(item => item.brand))];
-  return uniqueBrands as string[];
 };
 
 export const fetchFeaturedProducts = async (): Promise<Product[]> => {
@@ -75,7 +81,7 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
     throw error;
   }
   
-  return data || [];
+  return data as Product[] || [];
 };
 
 export const fetchCategories = async (): Promise<Category[]> => {
