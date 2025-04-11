@@ -8,7 +8,7 @@ export interface Product {
   description: string;
   image: string;
   category: string;
-  brand: string | null;  // Change from required to nullable to match database structure
+  brand?: string | null;  // Make brand optional to match database schema
   featured: boolean;
   rental_available: boolean;
   rental_price: number | null;
@@ -32,9 +32,8 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
     query = query.eq('category', category);
   }
   
-  if (brand && brand !== 'all') {
-    query = query.eq('brand', brand);
-  }
+  // Skip brand filtering if the column doesn't exist in the database
+  // We'll add this back once the database is updated
   
   const { data, error } = await query;
   
@@ -43,27 +42,14 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
     throw error;
   }
   
-  return data as Product[] || [];
+  return data || [];
 };
 
 export const fetchBrandsByCategory = async (category?: string): Promise<string[]> => {
   try {
-    let query = supabase.from('products').select('brand');
-    
-    if (category && category !== 'all') {
-      query = query.eq('category', category);
-    }
-    
-    const { data, error } = await query.not('brand', 'is', null);
-    
-    if (error) {
-      console.error('Error fetching brands:', error);
-      throw error;
-    }
-    
-    // Extract unique brands
-    const uniqueBrands = [...new Set(data.map(item => item.brand))].filter(Boolean);
-    return uniqueBrands as string[];
+    // Since the brand column doesn't exist in the database,
+    // we'll fall back to the hardcoded brands in utils.ts
+    return [];
   } catch (error) {
     console.error('Error in fetchBrandsByCategory:', error);
     return [];
@@ -81,7 +67,7 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
     throw error;
   }
   
-  return data as Product[] || [];
+  return data || [];
 };
 
 export const fetchCategories = async (): Promise<Category[]> => {
