@@ -1,35 +1,21 @@
+
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ProductCard from '@/components/ProductCard';
 import { 
   fetchProducts, 
   fetchCategories, 
-  fetchBrandsByCategory,
-  Product, 
-  Category 
+  Product
 } from '@/services/productService';
 import { brandsByCategory } from '@/lib/utils';
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious
-} from '@/components/ui/pagination';
 import { useToast } from '@/components/ui/use-toast';
-import { Badge } from '@/components/ui/badge';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { ChevronDown } from 'lucide-react';
+import CategoryFilter from '@/components/products/CategoryFilter';
+import BrandFilter from '@/components/products/BrandFilter';
+import ActiveFilters from '@/components/products/ActiveFilters';
+import ProductGrid from '@/components/products/ProductGrid';
+import ProductPagination from '@/components/products/ProductPagination';
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -94,6 +80,10 @@ const Products = () => {
     });
   };
 
+  const handleClearAllFilters = () => {
+    setSearchParams({ category: 'all', brand: 'all', page: '1' });
+  };
+
   useEffect(() => {
     if (productsError) {
       toast({
@@ -120,208 +110,37 @@ const Products = () => {
       <main className="flex-grow container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Shop All Products</h1>
         
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Categories</h2>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => handleCategoryChange('all')}
-              className={`px-4 py-2 rounded-full ${
-                currentCategory === 'all' 
-                  ? 'bg-techmart-purple text-white' 
-                  : 'bg-gray-100 hover:bg-gray-200'
-              }`}
-            >
-              All Products
-            </button>
-            
-            {categoriesLoading ? (
-              <div>Loading categories...</div>
-            ) : (
-              categories.map((category: Category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.name)}
-                  className={`px-4 py-2 rounded-full ${
-                    currentCategory === category.name 
-                      ? 'bg-techmart-purple text-white' 
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                >
-                  {category.name}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
+        <CategoryFilter 
+          categories={categories} 
+          currentCategory={currentCategory}
+          onCategoryChange={handleCategoryChange}
+          isLoading={categoriesLoading}
+        />
         
-        {availableBrands.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Brands</h2>
-            
-            <div className="block md:hidden mb-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full flex justify-between items-center">
-                    {currentBrand === 'all' ? 'All Brands' : currentBrand}
-                    <ChevronDown size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full">
-                  <DropdownMenuItem 
-                    onClick={() => handleBrandChange('all')}
-                    className={currentBrand === 'all' ? 'bg-accent' : ''}
-                  >
-                    All Brands
-                  </DropdownMenuItem>
-                  
-                  {availableBrands.map((brand) => (
-                    <DropdownMenuItem 
-                      key={brand} 
-                      onClick={() => handleBrandChange(brand)}
-                      className={currentBrand === brand ? 'bg-accent' : ''}
-                    >
-                      {brand}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            
-            <div className="hidden md:flex flex-wrap gap-2">
-              <button
-                onClick={() => handleBrandChange('all')}
-                className={`px-4 py-2 rounded-full ${
-                  currentBrand === 'all' 
-                    ? 'bg-techmart-purple text-white' 
-                    : 'bg-gray-100 hover:bg-gray-200'
-                }`}
-              >
-                All Brands
-              </button>
-              
-              {availableBrands.map((brand) => (
-                <button
-                  key={brand}
-                  onClick={() => handleBrandChange(brand)}
-                  className={`px-4 py-2 rounded-full ${
-                    currentBrand === brand 
-                      ? 'bg-techmart-purple text-white' 
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                >
-                  {brand}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <BrandFilter 
+          availableBrands={availableBrands}
+          currentBrand={currentBrand}
+          onBrandChange={handleBrandChange}
+        />
         
-        {(currentCategory !== 'all' || currentBrand !== 'all') && (
-          <div className="mb-6">
-            <h3 className="text-sm font-medium mb-2">Active Filters:</h3>
-            <div className="flex flex-wrap gap-2">
-              {currentCategory !== 'all' && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Category: {currentCategory}
-                  <button 
-                    className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
-                    onClick={() => handleCategoryChange('all')}
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              
-              {currentBrand !== 'all' && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Brand: {currentBrand}
-                  <button 
-                    className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
-                    onClick={() => handleBrandChange('all')}
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              
-              {(currentCategory !== 'all' || currentBrand !== 'all') && (
-                <button 
-                  className="text-sm text-gray-500 hover:text-gray-700 underline"
-                  onClick={() => setSearchParams({ category: 'all', brand: 'all', page: '1' })}
-                >
-                  Clear all filters
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        <ActiveFilters 
+          currentCategory={currentCategory}
+          currentBrand={currentBrand}
+          onCategoryChange={handleCategoryChange}
+          onBrandChange={handleBrandChange}
+          onClearAllFilters={handleClearAllFilters}
+        />
         
-        {productsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 py-8">
-            {[...Array(4)].map((_, index) => (
-              <div 
-                key={index}
-                className="bg-gray-100 animate-pulse rounded-lg h-[350px]"
-              />
-            ))}
-          </div>
-        ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={{
-                  id: product.id,
-                  name: product.name,
-                  price: product.price,
-                  description: product.description,
-                  image: product.image,
-                  category: product.category,
-                  brand: product.brand,
-                  featured: product.featured,
-                  rentalAvailable: product.rental_available,
-                  rentalPrice: product.rental_price || undefined
-                }} 
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="py-20 text-center">
-            <h3 className="text-xl font-medium">No products found</h3>
-            <p className="text-gray-500 mt-2">Try adjusting your filters</p>
-          </div>
-        )}
+        <ProductGrid 
+          products={filteredProducts}
+          isLoading={productsLoading}
+        />
 
-        {totalPages > 1 && (
-          <Pagination className="mt-12">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} 
-                />
-              </PaginationItem>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink 
-                    onClick={() => handlePageChange(page)}
-                    isActive={page === currentPage}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'} 
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
+        <ProductPagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </main>
 
       <Footer />
