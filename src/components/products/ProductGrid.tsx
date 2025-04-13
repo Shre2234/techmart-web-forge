@@ -22,7 +22,7 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
     );
   }
   
-  if (products.length === 0) {
+  if (!products || products.length === 0) {
     return (
       <div className="py-20 text-center">
         <h3 className="text-xl font-medium">No products found</h3>

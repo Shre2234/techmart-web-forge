@@ -29,6 +29,7 @@ const Products = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
 
+  // Fetch products based on category and brand filters
   const { data: products = [], isLoading: productsLoading, error: productsError } = useQuery({
     queryKey: ['products', currentCategory, currentBrand],
     queryFn: () => fetchProducts(
@@ -37,21 +38,24 @@ const Products = () => {
     )
   });
   
+  // Fetch categories
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: fetchCategories
   });
 
+  // Set available brands based on current category
   useEffect(() => {
-    setAvailableBrands(
-      currentCategory !== 'all' 
-        ? brandsByCategory[currentCategory] || []
-        : Object.values(brandsByCategory).flat().filter((v, i, a) => a.indexOf(v) === i)
-    );
+    const brands = currentCategory !== 'all' 
+      ? brandsByCategory[currentCategory] || []
+      : Object.values(brandsByCategory).flat().filter((v, i, a) => a.indexOf(v) === i);
+    
+    setAvailableBrands(brands);
   }, [currentCategory]);
 
+  // Apply pagination to filtered products
   useEffect(() => {
-    if (products.length) {
+    if (products && products.length > 0) {
       setTotalPages(Math.ceil(products.length / productsPerPage));
       
       const startIndex = (currentPage - 1) * productsPerPage;
@@ -63,14 +67,17 @@ const Products = () => {
     }
   }, [products, currentPage, productsPerPage]);
 
+  // Handle category filter change
   const handleCategoryChange = (category: string) => {
     setSearchParams({ category, brand: 'all', page: '1' });
   };
 
+  // Handle brand filter change
   const handleBrandChange = (brand: string) => {
     setSearchParams({ category: currentCategory, brand, page: '1' });
   };
 
+  // Handle pagination
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setSearchParams({ 
@@ -80,10 +87,12 @@ const Products = () => {
     });
   };
 
+  // Clear all filters
   const handleClearAllFilters = () => {
     setSearchParams({ category: 'all', brand: 'all', page: '1' });
   };
 
+  // Show error toast if products fail to load
   useEffect(() => {
     if (productsError) {
       toast({
@@ -94,14 +103,15 @@ const Products = () => {
     }
   }, [productsError, toast]);
 
+  // Ensure brand filter is valid for selected category
   useEffect(() => {
-    if (currentBrand !== 'all' && currentCategory !== 'all') {
-      const categoryBrands = brandsByCategory[currentCategory] || [];
-      if (!categoryBrands.includes(currentBrand)) {
+    // Only run this once when categories and filters are loaded
+    if (currentBrand !== 'all' && currentCategory !== 'all' && availableBrands.length > 0) {
+      if (!availableBrands.includes(currentBrand)) {
         setSearchParams({ category: currentCategory, brand: 'all', page: '1' });
       }
     }
-  }, [currentCategory, currentBrand, setSearchParams]);
+  }, [currentCategory, currentBrand, availableBrands, setSearchParams]);
 
   return (
     <div className="min-h-screen flex flex-col">
