@@ -1,6 +1,7 @@
 
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/services/productService';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProductGridProps {
   products: Product[];
@@ -12,9 +13,9 @@ const ProductGrid = ({ products, isLoading }: ProductGridProps) => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 py-8">
         {[...Array(4)].map((_, index) => (
-          <div 
+          <Skeleton 
             key={index}
-            className="bg-gray-100 animate-pulse rounded-lg h-[350px]"
+            className="h-[350px] w-full"
           />
         ))}
       </div>
