@@ -103,12 +103,19 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
     
     // Process products to add brand and apply price adjustments
     const productsWithBrands = data.map(item => {
-      // If the brand doesn't exist in the database, assign one based on category
-      // We need to explicitly add the brand property to the item object
-      const product = {
-        ...item,
-        brand: item.brand || getBrandForCategory(item.category)
-      } as Product;
+      // Explicitly create a Product object with a brand property
+      const product: Product = {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        description: item.description || "",
+        image: item.image || "/placeholder.svg",
+        category: item.category || "",
+        brand: item.brand || getBrandForCategory(item.category),
+        featured: item.featured || false,
+        rental_available: item.rental_available || false,
+        rental_price: item.rental_price
+      };
       
       // Apply brand-specific price adjustment
       return adjustPriceByBrand(product);
@@ -169,10 +176,19 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
     
     // Process products to add brand and apply price adjustments
     return data?.map(item => {
-      const product = {
-        ...item,
-        brand: item.brand || getBrandForCategory(item.category)
-      } as Product;
+      // Explicitly create a Product object with a brand property
+      const product: Product = {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        description: item.description || "",
+        image: item.image || "/placeholder.svg",
+        category: item.category || "",
+        brand: item.brand || getBrandForCategory(item.category),
+        featured: item.featured || false,
+        rental_available: item.rental_available || false,
+        rental_price: item.rental_price
+      };
       
       return adjustPriceByBrand(product);
     }) || [];
