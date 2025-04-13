@@ -3,10 +3,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useCart, Product } from '@/contexts/CartContext';
-import { ShoppingCart, Heart, Clock } from 'lucide-react';
+import { ShoppingCart, Heart, Clock, Tag } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatToINR } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface ProductCardProps {
   product: Product;
@@ -42,18 +43,24 @@ const ProductCard = ({ product, featured }: ProductCardProps) => {
             Featured
           </div>
         )}
+        {product.brand && (
+          <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+            <Tag size={12} />
+            <span>{product.brand}</span>
+          </div>
+        )}
       </div>
       <CardContent className="p-4">
         <div className="mb-2">
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">{product.category}</span>
             {product.brand && (
-              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+              <Badge variant="outline" className="font-medium">
                 {product.brand}
-              </span>
+              </Badge>
             )}
           </div>
-          <h3 className="font-semibold text-lg line-clamp-1">{product.name}</h3>
+          <h3 className="font-semibold text-lg line-clamp-1 mt-1">{product.name}</h3>
         </div>
         <div className="flex justify-between mb-2">
           <p className="text-xl font-bold text-techmart-purple">
