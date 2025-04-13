@@ -76,39 +76,54 @@ const adjustPriceByBrand = (product: Product): Product => {
 };
 
 export const fetchProducts = async (category?: string, brand?: string): Promise<Product[]> => {
-  let query = supabase.from('products').select('*');
-  
-  if (category && category !== 'all') {
-    query = query.eq('category', category);
-  }
-  
-  // Skip brand filtering if the column doesn't exist in the database
-  // We'll add this back once the database is updated
-  
-  const { data, error } = await query;
-  
-  if (error) {
-    console.error('Error fetching products:', error);
-    throw error;
-  }
-  
-  // Process products to add brand and apply price adjustments
-  const productsWithBrands = data?.map(item => {
-    // If the brand doesn't exist in the database, assign one based on category
-    // We need to explicitly add the brand property to the item object
-    const product = {
-      ...item,
-      brand: getBrandForCategory(item.category)
-    } as Product;
+  try {
+    let query = supabase.from('products').select('*');
     
-    // Apply brand-specific price adjustment
-    return adjustPriceByBrand(product);
-  }) || [];
-  
-  // Filter by brand if specified (client-side filtering since brand is added dynamically)
-  return brand && brand !== 'all' 
-    ? productsWithBrands.filter(p => p.brand === brand)
-    : productsWithBrands;
+    if (category && category !== 'all') {
+      query = query.eq('category', category);
+    }
+    
+    // Check for UPPERCASE/lowercase inconsistencies in category names
+    if (category && category !== 'all' && category.toLowerCase() !== category) {
+      console.log(`Trying capital case for category: ${category}`);
+      query = supabase.from('products').select('*').eq('category', category.charAt(0).toUpperCase() + category.slice(1));
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching products:', error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      console.log(`No products found for category: ${category}`);
+      return [];
+    }
+    
+    // Process products to add brand and apply price adjustments
+    const productsWithBrands = data.map(item => {
+      // If the brand doesn't exist in the database, assign one based on category
+      // We need to explicitly add the brand property to the item object
+      const product = {
+        ...item,
+        brand: item.brand || getBrandForCategory(item.category)
+      } as Product;
+      
+      // Apply brand-specific price adjustment
+      return adjustPriceByBrand(product);
+    });
+    
+    // Filter by brand if specified (client-side filtering since brand is added dynamically)
+    const filteredProducts = brand && brand !== 'all' 
+      ? productsWithBrands.filter(p => p.brand === brand)
+      : productsWithBrands;
+      
+    return filteredProducts;
+  } catch (error) {
+    console.error('Error in fetchProducts:', error);
+    return [];
+  }
 };
 
 // Helper function to get a random brand for a category
@@ -141,37 +156,47 @@ export const fetchBrandsByCategory = async (category?: string): Promise<string[]
 };
 
 export const fetchFeaturedProducts = async (): Promise<Product[]> => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('featured', true);
-  
-  if (error) {
-    console.error('Error fetching featured products:', error);
-    throw error;
-  }
-  
-  // Process products to add brand and apply price adjustments
-  return data?.map(item => {
-    const product = {
-      ...item,
-      brand: getBrandForCategory(item.category)
-    } as Product;
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('featured', true);
     
-    return adjustPriceByBrand(product);
-  }) || [];
+    if (error) {
+      console.error('Error fetching featured products:', error);
+      throw error;
+    }
+    
+    // Process products to add brand and apply price adjustments
+    return data?.map(item => {
+      const product = {
+        ...item,
+        brand: item.brand || getBrandForCategory(item.category)
+      } as Product;
+      
+      return adjustPriceByBrand(product);
+    }) || [];
+  } catch (error) {
+    console.error('Error in fetchFeaturedProducts:', error);
+    return [];
+  }
 };
 
 export const fetchCategories = async (): Promise<Category[]> => {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name');
-  
-  if (error) {
-    console.error('Error fetching categories:', error);
-    throw error;
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchCategories:', error);
+    return [];
   }
-  
-  return data || [];
 };

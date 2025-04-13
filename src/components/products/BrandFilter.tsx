@@ -33,10 +33,9 @@ const BrandFilter = ({
               <ChevronDown size={16} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-full">
+          <DropdownMenuContent align="start" className="w-[200px]">
             <DropdownMenuItem 
               onClick={() => onBrandChange('all')}
-              className={currentBrand === 'all' ? 'bg-accent' : ''}
             >
               All Brands
             </DropdownMenuItem>
@@ -45,7 +44,6 @@ const BrandFilter = ({
               <DropdownMenuItem 
                 key={brand} 
                 onClick={() => onBrandChange(brand)}
-                className={currentBrand === brand ? 'bg-accent' : ''}
               >
                 {brand}
               </DropdownMenuItem>

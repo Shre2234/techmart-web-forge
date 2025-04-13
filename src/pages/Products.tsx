@@ -30,7 +30,11 @@ const Products = () => {
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
 
   // Fetch products based on category and brand filters
-  const { data: products = [], isLoading: productsLoading, error: productsError } = useQuery({
+  const { 
+    data: products = [], 
+    isLoading: productsLoading, 
+    error: productsError 
+  } = useQuery({
     queryKey: ['products', currentCategory, currentBrand],
     queryFn: () => fetchProducts(
       currentCategory !== 'all' ? currentCategory : undefined,
@@ -104,8 +108,9 @@ const Products = () => {
   }, [productsError, toast]);
 
   // Ensure brand filter is valid for selected category
+  // This useEffect has been refactored to prevent infinite updates
   useEffect(() => {
-    // Only run this once when categories and filters are loaded
+    // Only run this when availableBrands changes and we have a specific brand and category selected
     if (currentBrand !== 'all' && currentCategory !== 'all' && availableBrands.length > 0) {
       if (!availableBrands.includes(currentBrand)) {
         setSearchParams({ category: currentCategory, brand: 'all', page: '1' });
@@ -146,11 +151,13 @@ const Products = () => {
           isLoading={productsLoading}
         />
 
-        <ProductPagination 
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
+        {!productsLoading && products && products.length > 0 && (
+          <ProductPagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
       </main>
 
       <Footer />
