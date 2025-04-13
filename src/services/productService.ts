@@ -104,6 +104,7 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
     // Process products to add brand and apply price adjustments
     const productsWithBrands = data.map(item => {
       // Explicitly create a Product object with a brand property
+      // Note: We're not trying to access item.brand directly, but assigning it
       const product: Product = {
         id: item.id,
         name: item.name,
@@ -111,7 +112,7 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
         description: item.description || "",
         image: item.image || "/placeholder.svg",
         category: item.category || "",
-        brand: item.brand || getBrandForCategory(item.category),
+        brand: getBrandForCategory(item.category), // No longer trying to access item.brand
         featured: item.featured || false,
         rental_available: item.rental_available || false,
         rental_price: item.rental_price
@@ -184,7 +185,7 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
         description: item.description || "",
         image: item.image || "/placeholder.svg",
         category: item.category || "",
-        brand: item.brand || getBrandForCategory(item.category),
+        brand: getBrandForCategory(item.category), // No longer trying to access item.brand
         featured: item.featured || false,
         rental_available: item.rental_available || false,
         rental_price: item.rental_price
