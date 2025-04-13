@@ -8,7 +8,7 @@ export interface Product {
   description: string;
   image: string;
   category: string;
-  brand?: string | null;  // Make brand optional to match database schema
+  brand: string | null;  // Update to accept null since database column can be null
   featured: boolean;
   rental_available: boolean;
   rental_price: number | null;
@@ -101,10 +101,9 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
       return [];
     }
     
-    // Process products to add brand and apply price adjustments
-    const productsWithBrands = data.map(item => {
-      // Explicitly create a Product object with a brand property
-      // Note: We're not trying to access item.brand directly, but assigning it
+    // Process products and apply price adjustments
+    const processedProducts = data.map(item => {
+      // Create product object with all fields from database
       const product: Product = {
         id: item.id,
         name: item.name,
@@ -112,7 +111,7 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
         description: item.description || "",
         image: item.image || "/placeholder.svg",
         category: item.category || "",
-        brand: getBrandForCategory(item.category), // No longer trying to access item.brand
+        brand: item.brand, // Now we can use the brand directly from the database
         featured: item.featured || false,
         rental_available: item.rental_available || false,
         rental_price: item.rental_price
@@ -122,10 +121,10 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
       return adjustPriceByBrand(product);
     });
     
-    // Filter by brand if specified (client-side filtering since brand is added dynamically)
+    // Filter by brand if specified (now using the brand from the database)
     const filteredProducts = brand && brand !== 'all' 
-      ? productsWithBrands.filter(p => p.brand === brand)
-      : productsWithBrands;
+      ? processedProducts.filter(p => p.brand === brand)
+      : processedProducts;
       
     return filteredProducts;
   } catch (error) {
@@ -134,29 +133,28 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
   }
 };
 
-// Helper function to get a random brand for a category
-const getBrandForCategory = (category?: string): string => {
-  if (!category) return 'Unknown';
-  
-  // Import the brandsByCategory directly from utils
-  const { brandsByCategory } = require('@/lib/utils');
-  
-  const brandsForCategory = brandsByCategory[category] || [];
-  if (brandsForCategory.length === 0) return 'Unknown';
-  
-  // Get a random brand from the available ones
-  return brandsForCategory[Math.floor(Math.random() * brandsForCategory.length)];
-};
-
+// Now fetch brands directly from the database
 export const fetchBrandsByCategory = async (category?: string): Promise<string[]> => {
   try {
-    // Since the brand column doesn't exist in the database,
-    // we'll fall back to the hardcoded brands in utils.ts
-    const { brandsByCategory } = require('@/lib/utils');
+    let query = supabase.from('products')
+      .select('brand')
+      .not('brand', 'is', null);
     
-    return category && category !== 'all' 
-      ? brandsByCategory[category] || []
-      : Object.values(brandsByCategory).flat().filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
+    if (category && category !== 'all') {
+      query = query.eq('category', category);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching brands:', error);
+      throw error;
+    }
+    
+    // Extract unique brands
+    const brands = [...new Set(data.map(item => item.brand).filter(Boolean))];
+    return brands as string[];
+    
   } catch (error) {
     console.error('Error in fetchBrandsByCategory:', error);
     return [];
@@ -175,9 +173,8 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
       throw error;
     }
     
-    // Process products to add brand and apply price adjustments
+    // Process products and apply price adjustments
     return data?.map(item => {
-      // Explicitly create a Product object with a brand property
       const product: Product = {
         id: item.id,
         name: item.name,
@@ -185,7 +182,7 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
         description: item.description || "",
         image: item.image || "/placeholder.svg",
         category: item.category || "",
-        brand: getBrandForCategory(item.category), // No longer trying to access item.brand
+        brand: item.brand, // Now we can use the brand directly from the database
         featured: item.featured || false,
         rental_available: item.rental_available || false,
         rental_price: item.rental_price
