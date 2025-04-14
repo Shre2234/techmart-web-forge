@@ -10,18 +10,13 @@ import { useCart } from '@/contexts/CartContext';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import { formatToINR } from '@/lib/utils';
+import PaymentModal from '@/components/PaymentModal';
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCart();
   const { toast } = useToast();
   const [promoCode, setPromoCode] = useState('');
-  
-  const handleCheckout = () => {
-    toast({
-      title: "Checkout initiated",
-      description: "This would redirect to a payment gateway in a real application.",
-    });
-  };
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   
   const handleApplyPromo = () => {
     toast({
@@ -29,6 +24,19 @@ const Cart = () => {
       description: `Promo code "${promoCode}" has been applied to your order.`,
     });
     setPromoCode('');
+  };
+  
+  const handleCheckout = () => {
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    toast({
+      title: "Order placed successfully!",
+      description: "Thank you for your purchase. Your order will be processed shortly.",
+    });
+    clearCart();
   };
   
   // Group items by purchase type (rental vs purchase)
@@ -55,6 +63,8 @@ const Cart = () => {
       </div>
     );
   }
+
+  const totalAmount = getCartTotal() * 1.07; // Including tax
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -228,7 +238,7 @@ const Cart = () => {
                 
                 <div className="flex justify-between font-bold">
                   <span>Total</span>
-                  <span>{formatToINR(getCartTotal() * 1.07)}</span>
+                  <span>{formatToINR(totalAmount)}</span>
                 </div>
               </div>
               
@@ -242,6 +252,13 @@ const Cart = () => {
           </div>
         </div>
       </main>
+      
+      <PaymentModal 
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSuccess={handlePaymentSuccess}
+        amount={totalAmount}
+      />
       
       <Footer />
     </div>
