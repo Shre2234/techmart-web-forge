@@ -4,6 +4,7 @@ import { X, CreditCard, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { formatToINR } from '@/lib/utils';
 
 interface PaymentModalProps {
   amount: number;
@@ -96,6 +97,9 @@ const PaymentModal = ({ amount, isOpen, onClose, onSuccess }: PaymentModalProps)
 
   if (!isOpen) return null;
 
+  // Convert amount to INR
+  const amountInINR = amount * 75; // Using the conversion rate from utils.ts
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -122,7 +126,7 @@ const PaymentModal = ({ amount, isOpen, onClose, onSuccess }: PaymentModalProps)
                   <label htmlFor="amount" className="block text-sm font-medium">
                     Amount
                   </label>
-                  <span className="text-lg font-bold">₹{amount.toFixed(2)}</span>
+                  <span className="text-lg font-bold">{formatToINR(amount)}</span>
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full">
                   <div className="h-2 bg-techmart-purple rounded-full" style={{ width: '100%' }}></div>
