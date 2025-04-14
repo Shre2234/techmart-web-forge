@@ -7,9 +7,8 @@ import Footer from '@/components/Footer';
 import { 
   fetchProducts, 
   fetchCategories, 
-  Product
+  fetchBrandsByCategory 
 } from '@/services/productService';
-import { brandsByCategory } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import CategoryFilter from '@/components/products/CategoryFilter';
 import BrandFilter from '@/components/products/BrandFilter';
@@ -25,51 +24,49 @@ const Products = () => {
   const { toast } = useToast();
   
   const productsPerPage = 8;
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [availableBrands, setAvailableBrands] = useState<string[]>([]);
 
-  // Fetch products based on category and brand filters
+  // Fetch products based on category filter
   const { 
     data: products = [], 
     isLoading: productsLoading, 
     error: productsError 
   } = useQuery({
-    queryKey: ['products', currentCategory, currentBrand],
-    queryFn: () => fetchProducts(
-      currentCategory !== 'all' ? currentCategory : undefined,
-      currentBrand !== 'all' ? currentBrand : undefined
-    )
+    queryKey: ['products', currentCategory],
+    queryFn: () => fetchProducts(currentCategory !== 'all' ? currentCategory : undefined)
   });
-  
+
   // Fetch categories
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: fetchCategories
   });
 
-  // Set available brands based on current category
-  useEffect(() => {
-    const brands = currentCategory !== 'all' 
-      ? brandsByCategory[currentCategory] || []
-      : Object.values(brandsByCategory).flat().filter((v, i, a) => a.indexOf(v) === i);
-    
-    setAvailableBrands(brands);
-  }, [currentCategory]);
+  // Fetch brands based on current category
+  const { data: availableBrands = [] } = useQuery({
+    queryKey: ['brands', currentCategory],
+    queryFn: () => fetchBrandsByCategory(currentCategory !== 'all' ? currentCategory : undefined)
+  });
 
-  // Apply pagination to filtered products
+  // Apply filters and pagination to products
   useEffect(() => {
     if (products && products.length > 0) {
-      setTotalPages(Math.ceil(products.length / productsPerPage));
+      // Filter products by brand if a specific brand is selected
+      const brandFiltered = currentBrand !== 'all'
+        ? products.filter(product => product.brand === currentBrand)
+        : products;
+      
+      setTotalPages(Math.ceil(brandFiltered.length / productsPerPage));
       
       const startIndex = (currentPage - 1) * productsPerPage;
-      const pageProducts = products.slice(startIndex, startIndex + productsPerPage);
+      const pageProducts = brandFiltered.slice(startIndex, startIndex + productsPerPage);
       setFilteredProducts(pageProducts);
     } else {
       setFilteredProducts([]);
       setTotalPages(1);
     }
-  }, [products, currentPage, productsPerPage]);
+  }, [products, currentBrand, currentPage, productsPerPage]);
 
   // Handle category filter change
   const handleCategoryChange = (category: string) => {
@@ -106,17 +103,6 @@ const Products = () => {
       });
     }
   }, [productsError, toast]);
-
-  // Ensure brand filter is valid for selected category
-  // This useEffect has been refactored to prevent infinite updates
-  useEffect(() => {
-    // Only run this when availableBrands changes and we have a specific brand and category selected
-    if (currentBrand !== 'all' && currentCategory !== 'all' && availableBrands.length > 0) {
-      if (!availableBrands.includes(currentBrand)) {
-        setSearchParams({ category: currentCategory, brand: 'all', page: '1' });
-      }
-    }
-  }, [currentCategory, currentBrand, availableBrands, setSearchParams]);
 
   return (
     <div className="min-h-screen flex flex-col">

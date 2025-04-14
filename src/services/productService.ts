@@ -8,7 +8,7 @@ export interface Product {
   description: string;
   image: string;
   category: string;
-  brand: string | null;  // Update to accept null since database column can be null
+  brand: string | null;
   featured: boolean;
   rental_available: boolean;
   rental_price: number | null;
@@ -75,7 +75,7 @@ const adjustPriceByBrand = (product: Product): Product => {
   return product;
 };
 
-export const fetchProducts = async (category?: string, brand?: string): Promise<Product[]> => {
+export const fetchProducts = async (category?: string): Promise<Product[]> => {
   try {
     let query = supabase.from('products').select('*');
     
@@ -121,19 +121,14 @@ export const fetchProducts = async (category?: string, brand?: string): Promise<
       return adjustPriceByBrand(product);
     });
     
-    // Filter by brand if specified (now using the brand from the database)
-    const filteredProducts = brand && brand !== 'all' 
-      ? processedProducts.filter(p => p.brand === brand)
-      : processedProducts;
-      
-    return filteredProducts;
+    return processedProducts;
   } catch (error) {
     console.error('Error in fetchProducts:', error);
     return [];
   }
 };
 
-// Now fetch brands directly from the database
+// Fetch brands directly from the database based on category
 export const fetchBrandsByCategory = async (category?: string): Promise<string[]> => {
   try {
     let query = supabase.from('products')
@@ -182,7 +177,7 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
         description: item.description || "",
         image: item.image || "/placeholder.svg",
         category: item.category || "",
-        brand: item.brand, // Now we can use the brand directly from the database
+        brand: item.brand,
         featured: item.featured || false,
         rental_available: item.rental_available || false,
         rental_price: item.rental_price
