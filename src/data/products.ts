@@ -1,4 +1,3 @@
-
 import { Product } from '../contexts/CartContext';
 
 export const products: Product[] = [
@@ -142,6 +141,30 @@ export const products: Product[] = [
     brand: 'Xiaomi',
     featured: false,
     rentalAvailable: false
+  },
+  {
+    id: '13',
+    name: 'iPhone 15 Pro',
+    price: 1099.99,
+    description: '6.1-inch Super Retina XDR display, A17 Pro chip, 48MP camera system, titanium design.',
+    image: '/placeholder.svg',
+    category: 'Phones',
+    brand: 'Apple',
+    featured: true,
+    rentalAvailable: true,
+    rentalPrice: 59.99
+  },
+  {
+    id: '14',
+    name: 'Samsung Galaxy S24 Ultra',
+    price: 1299.99,
+    description: '6.8-inch Dynamic AMOLED display, Snapdragon 8 Gen 3, 200MP camera, S Pen included.',
+    image: '/placeholder.svg',
+    category: 'Phones',
+    brand: 'Samsung',
+    featured: true,
+    rentalAvailable: true,
+    rentalPrice: 69.99
   }
 ];
 

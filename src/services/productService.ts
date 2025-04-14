@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Product {
@@ -25,7 +24,6 @@ export interface Brand {
   category: string;
 }
 
-// Brand-specific price multipliers
 const brandPriceFactors: Record<string, number> = {
   'Samsung': 1.2,
   'LG': 1.0,
@@ -52,14 +50,11 @@ const brandPriceFactors: Record<string, number> = {
   'Garmin': 1.2
 };
 
-// Function to adjust product price based on brand
 const adjustPriceByBrand = (product: Product): Product => {
   if (product.brand && brandPriceFactors[product.brand]) {
-    // Apply brand price factor to base price
     const basePrice = product.price / (brandPriceFactors[product.brand] || 1);
     const adjustedPrice = basePrice * (brandPriceFactors[product.brand] || 1);
     
-    // Update the rental price as well if available
     let adjustedRentalPrice = product.rental_price;
     if (product.rental_price !== null) {
       const baseRentalPrice = product.rental_price / (brandPriceFactors[product.brand] || 1);
@@ -68,12 +63,62 @@ const adjustPriceByBrand = (product: Product): Product => {
     
     return {
       ...product,
-      price: Math.round(adjustedPrice * 100) / 100, // Round to 2 decimal places
+      price: Math.round(adjustedPrice * 100) / 100,
       rental_price: adjustedRentalPrice !== null ? Math.round(adjustedRentalPrice * 100) / 100 : null
     };
   }
   return product;
 };
+
+const ensureNewProductsExist = async () => {
+  try {
+    const { data: iphone } = await supabase
+      .from('products')
+      .select('*')
+      .eq('name', 'iPhone 15 Pro')
+      .single();
+    
+    const { data: samsung } = await supabase
+      .from('products')
+      .select('*')
+      .eq('name', 'Samsung Galaxy S24 Ultra')
+      .single();
+    
+    if (!iphone) {
+      await supabase.from('products').insert({
+        name: 'iPhone 15 Pro',
+        price: 1099.99,
+        description: '6.1-inch Super Retina XDR display, A17 Pro chip, 48MP camera system, titanium design.',
+        image: '/placeholder.svg',
+        category: 'Phones',
+        brand: 'Apple',
+        featured: true,
+        rental_available: true,
+        rental_price: 59.99
+      });
+      console.log('Added iPhone 15 Pro to database');
+    }
+    
+    if (!samsung) {
+      await supabase.from('products').insert({
+        name: 'Samsung Galaxy S24 Ultra',
+        price: 1299.99,
+        description: '6.8-inch Dynamic AMOLED display, Snapdragon 8 Gen 3, 200MP camera, S Pen included.',
+        image: '/placeholder.svg',
+        category: 'Phones',
+        brand: 'Samsung',
+        featured: true,
+        rental_available: true,
+        rental_price: 69.99
+      });
+      console.log('Added Samsung Galaxy S24 Ultra to database');
+    }
+  } catch (error) {
+    console.error('Error ensuring new products exist:', error);
+  }
+};
+
+ensureNewProductsExist();
 
 export const fetchProducts = async (category?: string): Promise<Product[]> => {
   try {
@@ -83,7 +128,6 @@ export const fetchProducts = async (category?: string): Promise<Product[]> => {
       query = query.eq('category', category);
     }
     
-    // Check for UPPERCASE/lowercase inconsistencies in category names
     if (category && category !== 'all' && category.toLowerCase() !== category) {
       console.log(`Trying capital case for category: ${category}`);
       query = supabase.from('products').select('*').eq('category', category.charAt(0).toUpperCase() + category.slice(1));
@@ -101,9 +145,7 @@ export const fetchProducts = async (category?: string): Promise<Product[]> => {
       return [];
     }
     
-    // Process products and apply price adjustments
     const processedProducts = data.map(item => {
-      // Create product object with all fields from database
       const product: Product = {
         id: item.id,
         name: item.name,
@@ -111,13 +153,12 @@ export const fetchProducts = async (category?: string): Promise<Product[]> => {
         description: item.description || "",
         image: item.image || "/placeholder.svg",
         category: item.category || "",
-        brand: item.brand, // Now we can use the brand directly from the database
+        brand: item.brand,
         featured: item.featured || false,
         rental_available: item.rental_available || false,
         rental_price: item.rental_price
       };
       
-      // Apply brand-specific price adjustment
       return adjustPriceByBrand(product);
     });
     
@@ -128,7 +169,6 @@ export const fetchProducts = async (category?: string): Promise<Product[]> => {
   }
 };
 
-// Fetch brands directly from the database based on category
 export const fetchBrandsByCategory = async (category?: string): Promise<string[]> => {
   try {
     let query = supabase.from('products')
@@ -146,10 +186,8 @@ export const fetchBrandsByCategory = async (category?: string): Promise<string[]
       throw error;
     }
     
-    // Extract unique brands
     const brands = [...new Set(data.map(item => item.brand).filter(Boolean))];
     return brands as string[];
-    
   } catch (error) {
     console.error('Error in fetchBrandsByCategory:', error);
     return [];
@@ -168,7 +206,6 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
       throw error;
     }
     
-    // Process products and apply price adjustments
     return data?.map(item => {
       const product: Product = {
         id: item.id,
