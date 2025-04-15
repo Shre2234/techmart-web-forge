@@ -81,6 +81,20 @@ const Auth = () => {
     }
   };
 
+  const switchToSignup = () => {
+    const signupTab = document.querySelector('[data-value="signup"]');
+    if (signupTab instanceof HTMLElement) {
+      signupTab.click();
+    }
+  };
+
+  const switchToLogin = () => {
+    const loginTab = document.querySelector('[data-value="login"]');
+    if (loginTab instanceof HTMLElement) {
+      loginTab.click();
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
@@ -152,7 +166,7 @@ const Auth = () => {
               </CardContent>
               <CardFooter className="flex justify-center text-sm">
                 <div className="text-muted-foreground">
-                  Don't have an account? <a href="#" className="text-techmart-purple hover:underline" onClick={() => document.querySelector('[data-value="signup"]')?.click()}>Sign up</a>
+                  Don't have an account? <a href="#" className="text-techmart-purple hover:underline" onClick={switchToSignup}>Sign up</a>
                 </div>
               </CardFooter>
             </Card>
@@ -250,7 +264,7 @@ const Auth = () => {
               </CardContent>
               <CardFooter className="flex justify-center text-sm">
                 <div className="text-muted-foreground">
-                  Already have an account? <a href="#" className="text-techmart-purple hover:underline" onClick={() => document.querySelector('[data-value="login"]')?.click()}>Sign in</a>
+                  Already have an account? <a href="#" className="text-techmart-purple hover:underline" onClick={switchToLogin}>Sign in</a>
                 </div>
               </CardFooter>
             </Card>
