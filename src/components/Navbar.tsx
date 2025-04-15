@@ -1,16 +1,41 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, User, Menu, X, Search } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, User, Menu, X, Search, LogOut, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Navbar = () => {
   const { getCartItemCount } = useCart();
+  const { user, userRole, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
   
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase();
+  };
 
   return (
     <nav className="bg-white shadow-sm py-4">
@@ -41,9 +66,53 @@ const Navbar = () => {
 
           {/* Icons */}
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon">
-              <User size={20} className="text-gray-700" />
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-techmart-purple text-white">
+                        {user.email ? getInitials(user.email.split('@')[0]) : 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.email}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {userRole === 'admin' ? 'Administrator' : 'User'}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  {userRole === 'admin' && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Admin Dashboard</span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate('/auth')}
+                title="Login or Sign up"
+              >
+                <LogIn size={20} className="text-gray-700" />
+              </Button>
+            )}
             <Link to="/cart" className="relative">
               <ShoppingCart size={20} className="text-gray-700" />
               {getCartItemCount() > 0 && (
@@ -74,6 +143,27 @@ const Navbar = () => {
               <Link to="/products" className="text-gray-700 py-2 hover:text-techmart-purple" onClick={toggleMenu}>Products</Link>
               <Link to="/deals" className="text-gray-700 py-2 hover:text-techmart-purple" onClick={toggleMenu}>Deals</Link>
               <Link to="/support" className="text-gray-700 py-2 hover:text-techmart-purple" onClick={toggleMenu}>Support</Link>
+              {!user && (
+                <Link to="/auth" className="text-gray-700 py-2 hover:text-techmart-purple" onClick={toggleMenu}>Login / Sign Up</Link>
+              )}
+              {user && (
+                <>
+                  <Link to="/profile" className="text-gray-700 py-2 hover:text-techmart-purple" onClick={toggleMenu}>Profile</Link>
+                  {userRole === 'admin' && (
+                    <Link to="/admin" className="text-gray-700 py-2 hover:text-techmart-purple" onClick={toggleMenu}>Admin Dashboard</Link>
+                  )}
+                  <button 
+                    className="text-gray-700 py-2 hover:text-techmart-purple text-left flex items-center space-x-2" 
+                    onClick={() => {
+                      handleSignOut();
+                      toggleMenu();
+                    }}
+                  >
+                    <LogOut size={18} />
+                    <span>Log out</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
