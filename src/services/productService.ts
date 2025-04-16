@@ -1,4 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import { predictPrice } from "./aiService";
 
 export interface Product {
   id: string;
@@ -11,6 +13,7 @@ export interface Product {
   featured: boolean;
   rental_available: boolean;
   rental_price: number | null;
+  ai_predicted_price?: number;
 }
 
 export interface Category {
@@ -120,6 +123,44 @@ const ensureNewProductsExist = async () => {
 
 ensureNewProductsExist();
 
+// Get AI-predicted price for a product
+export const getAIPredictedPrice = async (product: Product): Promise<number> => {
+  try {
+    // Create features object based on product description
+    const features: Record<string, any> = {
+      premium: product.price > 500, // Determine if it's a premium product
+    };
+    
+    // Extract additional features from description text (simplified)
+    if (product.description) {
+      if (product.description.toLowerCase().includes('4k')) {
+        features.resolution = '4K';
+      } else if (product.description.toLowerCase().includes('8k')) {
+        features.resolution = '8K';
+      }
+      
+      // Extract memory information if present
+      const memoryMatch = product.description.match(/(\d+)(GB|TB)/i);
+      if (memoryMatch) {
+        const value = parseInt(memoryMatch[1]);
+        const unit = memoryMatch[2].toUpperCase();
+        features.memory = unit === 'TB' ? value * 1024 : value;
+      }
+    }
+    
+    const predictionResponse = await predictPrice({
+      category: product.category,
+      brand: product.brand,
+      features,
+    });
+    
+    return predictionResponse.predicted_price;
+  } catch (error) {
+    console.error('Error getting AI predicted price:', error);
+    return product.price; // Fall back to actual price if prediction fails
+  }
+};
+
 export const fetchProducts = async (category?: string): Promise<Product[]> => {
   try {
     let query = supabase.from('products').select('*');
@@ -162,7 +203,23 @@ export const fetchProducts = async (category?: string): Promise<Product[]> => {
       return adjustPriceByBrand(product);
     });
     
-    return processedProducts;
+    // Get AI-predicted prices in parallel
+    const productsWithPredictions = await Promise.all(
+      processedProducts.map(async (product) => {
+        try {
+          const predictedPrice = await getAIPredictedPrice(product);
+          return {
+            ...product,
+            ai_predicted_price: predictedPrice
+          };
+        } catch (error) {
+          console.error(`Failed to get prediction for ${product.name}:`, error);
+          return product;
+        }
+      })
+    );
+    
+    return productsWithPredictions;
   } catch (error) {
     console.error('Error in fetchProducts:', error);
     return [];
