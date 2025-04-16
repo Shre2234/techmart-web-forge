@@ -1,10 +1,10 @@
-
 import { useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Tag, Timer, Check } from 'lucide-react';
+import { formatToINR } from '@/lib/utils';
 
 const Deals = () => {
   const { toast } = useToast();
@@ -58,8 +58,8 @@ const Deals = () => {
                 <p className="text-gray-600 mb-4">16GB RAM, 512GB SSD, Latest Gen Processor</p>
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <span className="text-gray-500 line-through">$1299</span>
-                    <span className="text-2xl font-bold text-techmart-purple ml-2">$909</span>
+                    <span className="text-gray-500 line-through">{formatToINR(1299)}</span>
+                    <span className="text-2xl font-bold text-techmart-purple ml-2">{formatToINR(909)}</span>
                   </div>
                   <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
                     <Check size={12} className="mr-1" />
@@ -91,8 +91,8 @@ const Deals = () => {
                 <p className="text-gray-600 mb-4">Wireless, 30h Battery Life, Premium Sound</p>
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <span className="text-gray-500 line-through">$299</span>
-                    <span className="text-2xl font-bold text-techmart-purple ml-2">$224</span>
+                    <span className="text-gray-500 line-through">{formatToINR(299)}</span>
+                    <span className="text-2xl font-bold text-techmart-purple ml-2">{formatToINR(224)}</span>
                   </div>
                   <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
                     <Check size={12} className="mr-1" />
@@ -124,8 +124,8 @@ const Deals = () => {
                 <p className="text-gray-600 mb-4">Heart Rate Monitor, GPS, 7 Day Battery Life</p>
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <span className="text-gray-500 line-through">$199</span>
-                    <span className="text-2xl font-bold text-techmart-purple ml-2">$119</span>
+                    <span className="text-gray-500 line-through">{formatToINR(199)}</span>
+                    <span className="text-2xl font-bold text-techmart-purple ml-2">{formatToINR(119)}</span>
                   </div>
                   <div className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center">
                     <Tag size={12} className="mr-1" />
@@ -157,7 +157,7 @@ const Deals = () => {
               <a href="#" className="bg-white rounded-lg p-6 text-center shadow-md hover:shadow-lg transition-shadow">
                 <div className="bg-techmart-purple/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-techmart-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 110 4v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold">Smartphones</h3>
